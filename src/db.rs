@@ -28,3 +28,20 @@ pub async fn create_schema(db_url: &str) -> Result<SqliteQueryResult, sqlx::Erro
     pool.close().await;
     return result;
 }
+
+pub async fn check_db(db_url:&str){
+    if !Sqlite::database_exists(&db_url).await.unwrap_or(false) {
+        Sqlite::create_database(&db_url).await.unwrap();
+        match create_schema(&db_url).await {
+            Ok(_) => println!("Database created Sucessfully"),
+            Err(e) => panic!("{}", e),
+        }
+    }
+    let instances = SqlitePool::connect(&db_url).await.unwrap();
+    let qry = "INSERT INTO settings (description) VALUES($1)";
+    let result = sqlx::query(&qry).bind("testing").execute(&instances).await;
+
+    instances.close().await;
+
+    println!("{:?}", result);
+}
