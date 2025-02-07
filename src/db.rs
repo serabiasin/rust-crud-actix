@@ -1,35 +1,29 @@
+// use crate::Pool;
+// use actix_web::http::StatusCode;
+// use actix_web::{delete, get, patch, post, web, Responder};
+// use actix_web::{Error, HttpResponse};
+
+use sqlx::Row;
 use sqlx::{migrate::MigrateDatabase, sqlite::SqliteQueryResult, Sqlite, SqlitePool};
 
 pub async fn create_schema(db_url: &str) -> Result<SqliteQueryResult, sqlx::Error> {
     let pool = SqlitePool::connect(&db_url).await?;
-    let qry =
-    "PRAGMA foreign_keys = ON ;
-    CREATE TABLE IF NOT EXISTS settings
-        (
-            settings_id             INTEGER PRIMARY KEY NOT NULL,
-            description             TEXT                NOT NULL,
-            created_on              DATETIME DEFAULT (datetime('now','localtime')),
-            updated_on              DATETIME DEFAULT (datetime('now','localtime')),
-            done                    BOOLEAN             NOT NULL DEFAULT 0
-        );
-    CREATE TABLE IF NOT EXISTS project
-        (
-            project_id                   INTEGER PRIMARY KEY AUTOINCREMENT,
-            product_name                 TEXT ,
-            created_on                   DATETIME DEFAULT (datetime('now','localtime')),
-            updated_on                   DATETIME DEFAULT (datetime('now','localtime')),
-            img_directory                TEXT NOT NULL,
-            out_directory                TEXT NOT NULL,
-            status                       TEXT NOT NULL,
-            settings_id                  INTEGER  NOT NULL DEFAULT 1,
-            FOREIGN KEY (settings_id)    REFERENCES settings (settings_id) ON UPDATE SET NULL ON DELETE SET NULL
+    let qry = "
+    CREATE TABLE IF NOT EXISTS books_db(
+            id_book                   INTEGER PRIMARY KEY AUTOINCREMENT,
+            name_book                 TEXT NOT NULL,
+            author_book               TEXT NOT NULL,
+            created_on                DATETIME DEFAULT (datetime('now','localtime')),
+            updated_on                DATETIME DEFAULT (datetime('now','localtime'))
         );";
+
     let result = sqlx::query(&qry).execute(&pool).await;
     pool.close().await;
+
     return result;
 }
 
-pub async fn check_db(db_url:&str){
+pub async fn check_db(db_url: &str) {
     if !Sqlite::database_exists(&db_url).await.unwrap_or(false) {
         Sqlite::create_database(&db_url).await.unwrap();
         match create_schema(&db_url).await {
@@ -38,8 +32,12 @@ pub async fn check_db(db_url:&str){
         }
     }
     let instances = SqlitePool::connect(&db_url).await.unwrap();
-    let qry = "INSERT INTO settings (description) VALUES($1)";
-    let result = sqlx::query(&qry).bind("testing").execute(&instances).await;
+    let qry = "INSERT INTO books_db (name_book,author_book) VALUES($1,$2)";
+    let result = sqlx::query(&qry)
+        .bind("testing")
+        .bind("test 2")
+        .execute(&instances)
+        .await;
 
     instances.close().await;
 
