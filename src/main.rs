@@ -12,7 +12,7 @@ async fn main() -> std::io::Result<()> {
     let db_url = String::from("sqlite://sqlite.db");
 
     check_db(&db_url).await; //menunggu proses selesai, karena async
-    insert_db(&db_url, "Mulyono adalah kita", "Joke 'O We").await;
+    insert_db(&db_url, "Hello world adalah kita", "Joke 'O We").await;
     // let id: u32 = 2;
     // select_data_db(&id).await;
     HttpServer::new(|| {
